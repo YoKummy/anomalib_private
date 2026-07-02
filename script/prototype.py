@@ -3,8 +3,6 @@
 
 from pathlib import Path
 import time
-import torch
-from torchmetrics.classification import BinaryAUROC
 
 # Modern Anomalib Core Components
 from anomalib.data import Folder
@@ -22,30 +20,19 @@ EXPORT_DIR = Path("exported_models")
 
 # Define target high-resolution camera dimension
 IMAGE_SIZE = (1024, 1024)
-TILE_SIZE = (256, 256)
 
 # -------------------------------------------------------------------------
-# 2. Data Preparation (With Native Tiling)
+# 2. Data Preparation (No Masks / Classification-Style Evaluation)
 # -------------------------------------------------------------------------
-# Slices your large image into standard tiles on the fly for fast, low-memory execution
 datamodule = Folder(
     name="production_dataset",
     root=DATA_ROOT,
-    normal_dir="train/good",          # Training requires ONLY normal data
-    test_split_mode="from_dir",       # Splitting via defined folders below
-    test_normal_dir="test/good",
-    test_abnormal_dir="test/bad",
-    mask_dir="ground_truth/bad",
-    task="segmentation",
-    image_size=IMAGE_SIZE,
-    batch_size=1,                     # EfficientAD standard baseline is 1
-    tiling={
-        "enable": True,
-        "tile_size": TILE_SIZE,
-        "stride": TILE_SIZE,          # Non-overlapping tile grid
-        "remove_border_count": 0,
-        "use_random_tiling": False
-    }
+    normal_dir="train/good",           # Train with normal-only samples
+    test_split_mode="from_dir",        # Use explicit test folders
+    normal_test_dir="test/good",
+    abnormal_dir="test/bad",
+    train_batch_size=1,
+    eval_batch_size=1,
 )
 
 # -------------------------------------------------------------------------
@@ -99,19 +86,12 @@ print(f"Average per image: {total_time / len(predictions):.4f}s")
 # 5. Metrics Evaluation
 # -------------------------------------------------------------------------
 image_auroc = AUROC(fields=("pred_score", "gt_label"))
-pixel_auroc = BinaryAUROC()
 
 for batch in predictions:
     image_auroc.update(batch)
 
-    if hasattr(batch, "gt_mask") and batch.gt_mask is not None:
-        pred = batch.anomaly_map.float().flatten()
-        gt = batch.gt_mask.long().flatten()
-        pixel_auroc.update(pred, gt)
-
 print("\n--- Benchmark Validation Results ---")
 print("Image-level AUROC:", round(image_auroc.compute().item(), 4))
-print("Pixel-level AUROC:", round(pixel_auroc.compute().item(), 4))
 
 # -------------------------------------------------------------------------
 # 6. Edge Optimization & Export
