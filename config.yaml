@@ -1,0 +1,31 @@
+model:
+  class_path: anomalib.models.Patchcore
+  init_args:
+    backbone: wide_resnet50_2
+    layers: ["layer2", "layer3"]
+    pre_trained: true
+    coreset_sampling_ratio: 0.1
+    num_neighbors: 9
+    pre_processor: true
+    post_processor: true
+    evaluator: true
+    visualizer: true
+
+data:
+  class_path: anomalib.data.datamodule.Folder.FolderDataModule
+  init_args:
+    root: ./datasets/LGP
+    normal_dir: train/normal
+    # abnormal_dir: anomaly  # Uncomment if exists
+    train_batch_size: 2
+    val_batch_size: 2
+    num_workers: 8
+
+trainer:
+  max_epochs: 1
+  enable_checkpointing: true
+  enable_progress_bar: true
+  enable_model_summary: true
+
+logging:
+  log_graph: false

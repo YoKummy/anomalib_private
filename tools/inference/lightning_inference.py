@@ -1,7 +1,7 @@
 # Copyright (C) 2022-2025 Intel Corporation
 # SPDX-License-Identifier: Apache-2.0
 
-"""Inference Entrypoint script."""
+"""Inference Entrypoint script with batch inference support."""
 
 from jsonargparse import ActionConfigFile, Namespace
 from lightning.pytorch.callbacks import Callback
@@ -14,17 +14,14 @@ from anomalib.models import AnomalibModule, get_model
 
 
 def get_parser() -> LightningArgumentParser:
-    """Get parser.
-
-    Returns:
-        LightningArgumentParser: The parser object.
-    """
+    """Get parser."""
     parser = LightningArgumentParser(description="Inference on Anomaly models in Lightning format.")
     parser.add_lightning_class_args(AnomalibModule, "model", subclass_mode=True)
     parser.add_lightning_class_args(Callback, "--callbacks", subclass_mode=True, required=False)
     parser.add_argument("--ckpt_path", type=str, required=True, help="Path to model weights")
     parser.add_class_arguments(PredictDataset, "--data", instantiate=False)
     parser.add_argument("--output", type=str, required=False, help="Path to save the output image(s).")
+    parser.add_argument("--batch_size", type=int, default=8, help="Batch size for inference (default: 8).")  # ? NEW
     parser.add_argument(
         "--show",
         action="store_true",
@@ -37,7 +34,6 @@ def get_parser() -> LightningArgumentParser:
         action=ActionConfigFile,
         help="Path to a configuration file in json or yaml format.",
     )
-
     return parser
 
 
@@ -51,10 +47,17 @@ def infer(args: Namespace) -> None:
     )
     model = get_model(args.model)
 
-    # create the dataset
+    # ? Create dataloader with custom batch size
     dataset = PredictDataset(**args.data)
-    dataloader = DataLoader(dataset, collate_fn=dataset.collate_fn, pin_memory=True)
+    dataloader = DataLoader(
+        dataset,
+        batch_size=args.batch_size,           # <--- Added batch support
+        collate_fn=dataset.collate_fn,
+        pin_memory=True,
+        num_workers=16,                        # Optional for speed
+    )
 
+    print(f"[INFO] Running inference with batch size: {args.batch_size}")
     engine.predict(model=model, dataloaders=[dataloader], ckpt_path=args.ckpt_path)
 
 
