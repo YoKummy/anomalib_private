@@ -1,0 +1,5 @@
+
+anomalib train --config examples\configs\model\fastflow.yaml --data Folder --data.name lgp --data.root ./datasets/LGP --data.normal_dir train/normal --data.train_batch_size 64 --data.eval_batch_size 16 --data.num_workers 8 --trainer.max_epochs 500 --trainer.enable_checkpointing true --trainer.accelerator gpu
+
+
+--data.abnormal_dir train/anomaly \
