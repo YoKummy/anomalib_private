@@ -67,8 +67,10 @@ engine = Engine(
 # -------------------------------------------------------------------------
 # 4. Execution Pipeline (Train / Load -> Predict -> Export)
 # -------------------------------------------------------------------------
-RUN_TRAINING = True  # Toggle off if you are reloading an existing weight set
-RUN_EXPORT = True    # Toggle on to compile the optimized production model
+RUN_TRAINING = True   # Toggle off if you are reloading an existing weight set
+RUN_EXPORT = True     # Master toggle for model export
+RUN_EXPORT_ONNX = True
+RUN_EXPORT_OPENVINO = True
 
 if RUN_TRAINING:
     print("\n--- Starting Model Training ---")
@@ -115,12 +117,26 @@ print("Pixel-level AUROC:", round(pixel_auroc.compute().item(), 4))
 # 6. Edge Optimization & Export
 # -------------------------------------------------------------------------
 if RUN_EXPORT:
-    print(
-        f"\n--- Compiling & Exporting Optimized OpenVINO Model to: {EXPORT_DIR} ---")
-    engine.export(
-        model=model,
-        export_root=EXPORT_DIR,
-        input_size=IMAGE_SIZE,
-        export_type=ExportType.OPENVINO,
-    )
+    if RUN_EXPORT_ONNX:
+        print(f"\n--- Exporting ONNX Model to: {EXPORT_DIR} ---")
+        engine.export(
+            model=model,
+            export_root=EXPORT_DIR,
+            model_file_name="efficientad",
+            input_size=IMAGE_SIZE,
+            export_type=ExportType.ONNX,
+            ckpt_path=ckpt_path,
+        )
+
+    if RUN_EXPORT_OPENVINO:
+        print(f"\n--- Compiling & Exporting OpenVINO Model to: {EXPORT_DIR} ---")
+        engine.export(
+            model=model,
+            export_root=EXPORT_DIR,
+            model_file_name="efficientad",
+            input_size=IMAGE_SIZE,
+            export_type=ExportType.OPENVINO,
+            ckpt_path=ckpt_path,
+        )
+
     print("Export complete.")
