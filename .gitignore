@@ -179,3 +179,12 @@ mlruns
 # application data
 application/**/data/
 application/**/logs/
+
+# local training artifacts
+model/
+exported_model/
+*.ckpt
+*.onnx
+*.bin
+*.xml
+dataset/

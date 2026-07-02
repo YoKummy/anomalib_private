@@ -1,0 +1,38 @@
+model:
+  name: padim
+  backbone: resnet50
+  layers:
+    - layer2
+    - layer3
+  n_features: 256
+  pre_trained: true
+
+data:
+  name: candle
+  root: C:/Users/1003380/spot-diff/VisA_pytorch/onecls/candle
+  task: segmentation
+  image_size: [1024, 1024]
+
+  train:
+    normal_dir: train/good
+
+  test:
+    normal_dir: test/good
+    abnormal_dir: test/bad
+    mask_dir: ground_truth/bad
+
+trainer:
+  accelerator: gpu
+  devices: 1
+  max_epochs: 1
+  log_every_n_steps: 20
+
+visualization:
+  show_images: false
+  save_images: true
+
+metrics:
+  image_auroc:
+    class_path: anomalib.metrics.AUROC
+  pixel_auroc:
+    class_path: anomalib.metrics.AUROC
