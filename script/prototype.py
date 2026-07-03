@@ -39,7 +39,7 @@ datamodule = Folder(
 # 3. Model & Engine Initialization
 # -------------------------------------------------------------------------
 # EfficientAD is extremely fast and drops memory bank overhead completely
-model = EfficientAd(model_size="s")
+model = EfficientAd(model_size=EfficientAdModelSize.M)
 
 engine = Engine(
     # EfficientAD converges quickly on small normal datasets
@@ -109,7 +109,8 @@ if RUN_EXPORT:
         )
 
     if RUN_EXPORT_OPENVINO:
-        print(f"\n--- Compiling & Exporting OpenVINO Model to: {EXPORT_DIR} ---")
+        print(
+            f"\n--- Compiling & Exporting OpenVINO Model to: {EXPORT_DIR} ---")
         engine.export(
             model=model,
             export_root=EXPORT_DIR,
