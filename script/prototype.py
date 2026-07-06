@@ -39,7 +39,7 @@ datamodule = Folder(
 # 3. Model & Engine Initialization
 # -------------------------------------------------------------------------
 # EfficientAD is extremely fast and drops memory bank overhead completely
-model = EfficientAd(model_size=EfficientAdModelSize.M)
+model = EfficientAd(model_size="small")
 
 engine = Engine(
     # EfficientAD converges quickly on small normal datasets
@@ -54,7 +54,7 @@ engine = Engine(
 # -------------------------------------------------------------------------
 # 4. Execution Pipeline (Train / Load -> Predict -> Export)
 # -------------------------------------------------------------------------
-RUN_TRAINING = True   # Toggle off if you are reloading an existing weight set
+RUN_TRAINING = False   # Toggle off if you are reloading an existing weight set
 RUN_EXPORT = True     # Master toggle for model export
 RUN_EXPORT_ONNX = True
 RUN_EXPORT_OPENVINO = True
@@ -65,7 +65,7 @@ if RUN_TRAINING:
     ckpt_path = None  # Uses the newly trained weights directly in the engine memory
 else:
     print("\n--- Skipping Training: Loading Existing Checkpoint ---")
-    ckpt_path = r"C:\Users\1003380\anomalib\model\efficientad_candle.ckpt"
+    ckpt_path = "/home/jonathanyeh/anomalib/script/results/EfficientAd/production_dataset/v0/weights/lightning/model.ckpt"
 
 # --- Inference Phase ---
 print("\n--- Executing Inference Pass ---")
