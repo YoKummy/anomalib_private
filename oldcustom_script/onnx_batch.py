@@ -8,12 +8,13 @@ from glob import glob
 from pathlib import Path
 ###### This one is for BATCH inference 
 # ---------------- CONFIG ----------------
-model_path = r"C:\Users\1003380\anomalib\exported_model\padim\weights\onnx\model.onnx"
-image_folder = r"C:\Users\1003380\anomalib_old\datasets\LGP\train\good_small"
-img_size = (512, 512)
+model_path = r"C:\Users\1003380\anomalib\exported_models\weights\onnx\efficientad.onnx"
+image_folder = r"C:\Users\1003380\anomalib\dataset\good_small\train\good"
+img_size = (1024,1024)
 batch_size = 8
 WARMUP_BATCHES = 5
 PRINT_EACH_BATCH = False
+PREFER_CUDA = True
 # ----------------------------------------
 
 
@@ -61,15 +62,20 @@ cuda_provider_options = {
     "do_copy_in_default_stream": "1",
 }
 
+providers = ["CPUExecutionProvider"]
+if PREFER_CUDA:
+    providers = [("CUDAExecutionProvider", cuda_provider_options), "CPUExecutionProvider"]
+
 sess = ort.InferenceSession(
     model_path,
     sess_options=session_options,
-    providers=[("CUDAExecutionProvider", cuda_provider_options), "CPUExecutionProvider"],
+    providers=providers,
 )
 print("Session providers:", sess.get_providers())
 
-if not sess.get_providers() or sess.get_providers()[0] != "CUDAExecutionProvider":
-    raise RuntimeError("CUDAExecutionProvider is not active. Stop to avoid CPU fallback benchmarks.")
+active_provider = sess.get_providers()[0] if sess.get_providers() else "UNKNOWN"
+if active_provider != "CUDAExecutionProvider":
+    print(f"WARNING: CUDAExecutionProvider is not active. Falling back to {active_provider}.")
 
 input_name = sess.get_inputs()[0].name
 output_names = [o.name for o in sess.get_outputs()]
